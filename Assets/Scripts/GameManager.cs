@@ -4,12 +4,15 @@ using HOV.UI;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Game {
-
-	public class GameManager : MonoBehaviour {
+namespace Game
+{
+//feels good, tastes good, must be mine... and if ya don't know now you know, i'm taking back the crown
+	public class GameManager : MonoBehaviour
+	{
 
 		[Serializable]
-		private class GameManagerEvent : UnityEvent<int , int> {
+		private class GameManagerEvent : UnityEvent<int , int>
+		{
 
 		}
 
@@ -24,14 +27,16 @@ namespace Game {
 
 		[Space]
 
-		public float TimeBeforeBlindfold = 5.0f;
+		public float
+			TimeBeforeBlindfold = 5.0f;
 
 		private float TimeSinceStart = 0;
 		private Step CurrentStep;
 		private int CurrentLevel = 1;
 		private int RemainingCount = 0;
 
-		private enum Step {
+		private enum Step
+		{
 
 			WarningScreen,
 			StartScreen,
@@ -41,12 +46,14 @@ namespace Game {
 		}
 
 		[SerializeField]
-		private GameManagerEvent OnScoreChanged;
+		private GameManagerEvent
+			OnScoreChanged;
 
-		void Start () {
+		void Start ()
+		{
 			Overlay.Hide ();
-			IntroPanel.SetActive ( false );
-			HUDPanel.SetActive ( false );
+			IntroPanel.SetActive (false);
+			HUDPanel.SetActive (false);
 			Controller.enabled = false;
 
 			CurrentStep = Step.WarningScreen;
@@ -54,58 +61,60 @@ namespace Game {
 			SFXController.Instance.PlaySeagulls ();
 		}
 
-		void Update () {
-			switch ( CurrentStep ) {
-				case Step.WarningScreen:
-					TimeSinceStart += Time.deltaTime;
-					if ( Input.anyKey || TimeSinceStart >= DURATION_WARNING_SCREEN ) {
-						CurrentStep = Step.StartScreen;
-						TimeSinceStart = 0;
-						IntroPanel.SetActive ( true );
-					}
-					break;
-				case Step.StartScreen:
-					TimeSinceStart += Time.deltaTime;
-					if ( TimeSinceStart > 5.0f ) {
-						CurrentStep = Step.GameStart;
-						Destroy ( IntroPanel );
-					}
-					break;
-				case Step.GameStart:
-					SetupLevel ();
-					HUDPanel.SetActive ( true );
+		void Update ()
+		{
+			switch (CurrentStep) {
+			case Step.WarningScreen:
+				TimeSinceStart += Time.deltaTime;
+				if (Input.anyKey || TimeSinceStart >= DURATION_WARNING_SCREEN) {
+					CurrentStep = Step.StartScreen;
+					TimeSinceStart = 0;
+					IntroPanel.SetActive (true);
+				}
+				break;
+			case Step.StartScreen:
+				TimeSinceStart += Time.deltaTime;
+				if (TimeSinceStart > 5.0f) {
+					CurrentStep = Step.GameStart;
+					Destroy (IntroPanel);
+				}
+				break;
+			case Step.GameStart:
+				SetupLevel ();
+				HUDPanel.SetActive (true);
 
-					CurrentStep = Step.GameRunning;
+				CurrentStep = Step.GameRunning;
 
-					break;
-				case Step.GameRunning:
-					if ( RemainingCount <= 0 ) {
-						ProgressNextLevel ();
-					}
+				break;
+			case Step.GameRunning:
+				if (RemainingCount <= 0) {
+					ProgressNextLevel ();
+				}
 
-					break;
+				break;
 			}
 		}
 
 		public int Score { get; private set; }
 
-		public void ChangeScore ( int Delta ) {
+		public void ChangeScore (int Delta)
+		{
 			int OldScore = Score;
-			if ( Delta < 0 ) {
+			if (Delta < 0) {
 				Score = 0;
-			}
-			else {
+			} else {
 				Score += Delta;
 			}
 
 			RemainingCount -= Score - OldScore;
 
-			if ( OnScoreChanged.GetPersistentEventCount () > 0 ) {
-				OnScoreChanged.Invoke ( Score , Score - OldScore );
+			if (OnScoreChanged.GetPersistentEventCount () > 0) {
+				OnScoreChanged.Invoke (Score, Score - OldScore);
 			}
 		}
 
-		public void ProgressNextLevel () {
+		public void ProgressNextLevel ()
+		{
 			CurrentLevel++;
 
 			Overlay.OverlayColor.a -= 0.0125f;
@@ -114,51 +123,54 @@ namespace Game {
 			CurrentStep = Step.GameStart;
 		}
 
-		private void SetupLevel () {
-			switch ( CurrentLevel ) {
-				case 1:
-					DelayTask ( Overlay.Show , TimeBeforeBlindfold );
-					DelayTask ( () => Controller.enabled = true , TimeBeforeBlindfold + Overlay.Duration );
-					ChangeScore ( -1 );
+		private void SetupLevel ()
+		{
+			switch (CurrentLevel) {
+			case 1:
+				DelayTask (Overlay.Show, TimeBeforeBlindfold);
+				DelayTask (() => Controller.enabled = true, TimeBeforeBlindfold + Overlay.Duration);
+				ChangeScore (-1);
 
-					Generator.Generate ( RemainingCount = 1 );
+				Generator.Generate (RemainingCount = 1);
 
-					break;
+				break;
 
-				case 2:
-					Generator.Generate ( RemainingCount = 2 );
+			case 2:
+				Generator.Generate (RemainingCount = 2);
 
-					break;
+				break;
 
-				case 3:
-					Generator.Generate ( RemainingCount = 4 );
+			case 3:
+				Generator.Generate (RemainingCount = 4);
 
-					break;
+				break;
 
-				case 4:
-					Generator.Generate ( RemainingCount = 5 );
+			case 4:
+				Generator.Generate (RemainingCount = 5);
 
-					break;
+				break;
 
-				case 5:
-					Generator.Generate ( RemainingCount = 8 );
+			case 5:
+				Generator.Generate (RemainingCount = 8);
 
-					break;
+				break;
 
-				default:
+			default:
 					// no more levels - you win!
-					RemainingCount = 0xfffffff;
+				RemainingCount = 0xfffffff;
 
-					break;
+				break;
 			}
 		}
 
-		private void DelayTask ( Action Task , float Delay ) {
-			StartCoroutine ( ExecuteDelayTask ( Task , Delay ) );
+		private void DelayTask (Action Task, float Delay)
+		{
+			StartCoroutine (ExecuteDelayTask (Task, Delay));
 		}
 
-		private IEnumerator ExecuteDelayTask ( Action Task , float Delay ) {
-			yield return new WaitForSeconds ( Delay );
+		private IEnumerator ExecuteDelayTask (Action Task, float Delay)
+		{
+			yield return new WaitForSeconds (Delay);
 
 			Task ();
 		}
